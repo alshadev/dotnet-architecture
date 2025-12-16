@@ -1,0 +1,6 @@
+@Arusha.Template.Api_HostAddress = http://localhost:5178
+
+GET {{Arusha.Template.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
