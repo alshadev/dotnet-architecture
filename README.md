@@ -44,6 +44,18 @@ dotnet run
 
 The API will be available at `http://localhost:5178`
 
+### Interactive API Documentation (Swagger)
+
+The API includes Swagger UI for interactive testing and documentation. Once the application is running, navigate to:
+
+- **Swagger UI**: `http://localhost:5178/swagger`
+
+This provides a user-friendly interface to:
+- View all available endpoints
+- Test API operations directly from the browser
+- See request/response schemas
+- Execute API calls without additional tools
+
 ### Example Usage
 
 Create a product:
