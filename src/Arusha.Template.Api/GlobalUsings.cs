@@ -1,0 +1,45 @@
+global using System;
+global using System.Collections.Generic;
+global using System.Linq;
+global using System.Net;
+global using System.Threading;
+global using System.Threading.Tasks;
+global using System.Text.Json;
+global using System.Reflection;
+global using System.Text;
+
+global using Microsoft.AspNetCore.Builder;
+global using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.AspNetCore.Routing;
+global using Microsoft.AspNetCore.Diagnostics;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.AspNetCore.Authentication.JwtBearer;
+global using Microsoft.AspNetCore.Authorization;
+global using Microsoft.AspNetCore.Identity;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Options;
+global using Microsoft.IdentityModel.Tokens;
+
+global using MediatR;
+global using Asp.Versioning;
+global using HealthChecks.UI.Client;
+global using Serilog;
+
+global using Arusha.Template.Application;
+global using Arusha.Template.Application.Exceptions;
+global using Arusha.Template.Application.Results;
+global using Arusha.Template.Application.Abstractions.Messaging;
+global using Arusha.Template.Application.Features.Products.CreateProduct;
+global using Arusha.Template.Application.Features.Products.GetProduct;
+global using Arusha.Template.Application.Features.Products.GetProducts;
+global using Arusha.Template.Application.Features.Orders.ConfirmOrder;
+global using Arusha.Template.Application.Features.Orders.CreateOrder;
+global using Arusha.Template.Application.Features.Orders.GetOrder;
+global using Arusha.Template.Application.Abstractions.Security;
+global using Arusha.Template.Infrastructure;
+global using Arusha.Template.Api.Endpoints;
+global using Arusha.Template.Api.Middleware;
+global using Arusha.Template.Api.Contracts;

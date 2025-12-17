@@ -1,4 +1,4 @@
-﻿namespace Arusha.Template.IntegrationTest;
+﻿namespace Arusha.Template.ArchitectureTest;
 
 public class UnitTest1
 {
