@@ -42,6 +42,15 @@ public sealed class ApplicationDbContext : IdentityDbContext<IdentityUser>, IApp
     {
         base.OnModelCreating(modelBuilder);
 
+        // Override ASP.NET Core Identity table names
+        modelBuilder.Entity<IdentityUser>().ToTable("Users");
+        modelBuilder.Entity<IdentityRole>().ToTable("Roles");
+        modelBuilder.Entity<IdentityUserRole<string>>().ToTable("UserRoles");
+        modelBuilder.Entity<IdentityUserClaim<string>>().ToTable("UserClaims");
+        modelBuilder.Entity<IdentityUserLogin<string>>().ToTable("UserLogins");
+        modelBuilder.Entity<IdentityUserToken<string>>().ToTable("UserTokens");
+        modelBuilder.Entity<IdentityRoleClaim<string>>().ToTable("RoleClaims");
+
         // Apply soft-delete filter to all soft-deletable entities
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
