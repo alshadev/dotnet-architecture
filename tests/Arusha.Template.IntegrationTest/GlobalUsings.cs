@@ -1,0 +1,31 @@
+global using System;
+global using System.Collections.Generic;
+global using System.Linq;
+global using System.Net;
+global using System.Net.Http;
+global using System.Net.Http.Headers;
+global using System.Net.Http.Json;
+global using System.Security.Claims;
+global using System.Text;
+global using System.Text.Encodings.Web;
+global using System.Threading;
+global using System.Threading.Tasks;
+
+global using Xunit;
+global using FluentAssertions;
+global using Microsoft.AspNetCore.Authentication;
+global using Microsoft.AspNetCore.Authentication.JwtBearer;
+global using Microsoft.AspNetCore.Hosting;
+global using Microsoft.AspNetCore.Mvc.Testing;
+global using Microsoft.AspNetCore.TestHost;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.DependencyInjection.Extensions;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Options;
+
+global using Arusha.Template.Api;
+global using Arusha.Template.Api.Contracts;
+global using Arusha.Template.Application.Features.Orders.CreateOrder;
+global using Arusha.Template.Application.Features.Orders.GetOrder;
+global using Arusha.Template.Infrastructure.Persistence;
