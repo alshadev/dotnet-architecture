@@ -19,13 +19,15 @@ public sealed class GlobalExceptionHandler(
 
         httpContext.Response.ContentType = "application/problem+json";
 
+        var correlationId = GetCorrelationId(httpContext);
+
         switch (exception)
         {
             case ValidationException validationException:
                 await HandleValidationExceptionAsync(httpContext, validationException, cancellationToken);
                 break;
             default:
-                var problemDetails = CreateProblemDetails(exception, httpContext);
+                var problemDetails = CreateProblemDetails(exception, httpContext, correlationId);
                 httpContext.Response.StatusCode = problemDetails.Status ?? (int)HttpStatusCode.InternalServerError;
                 await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
                 break;
@@ -39,6 +41,8 @@ public sealed class GlobalExceptionHandler(
         ValidationException validationException,
         CancellationToken cancellationToken)
     {
+        var correlationId = GetCorrelationId(httpContext);
+        
         var validationProblemDetails = new ValidationProblemDetails(validationException.Errors)
         {
             Status = (int)HttpStatusCode.BadRequest,
@@ -48,13 +52,15 @@ public sealed class GlobalExceptionHandler(
             Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1"
         };
 
+        validationProblemDetails.Extensions["traceId"] = correlationId;
+
         httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
         await httpContext.Response.WriteAsJsonAsync(validationProblemDetails, cancellationToken);
     }
 
-    private static ProblemDetails CreateProblemDetails(Exception exception, HttpContext context)
+    private static ProblemDetails CreateProblemDetails(Exception exception, HttpContext context, string correlationId)
     {
-        return exception switch
+        var problemDetails = exception switch
         {
             ArgumentException argumentException => new ProblemDetails
             {
@@ -70,7 +76,7 @@ public sealed class GlobalExceptionHandler(
                 Title = "Conflict",
                 Detail = invalidOpException.Message,
                 Instance = context.Request.Path,
-                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4"
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.8"
             },
             _ => new ProblemDetails
             {
@@ -81,5 +87,15 @@ public sealed class GlobalExceptionHandler(
                 Type = "https://tools.ietf.org/html/rfc7231#section-6.6.1"
             }
         };
+
+        problemDetails.Extensions["traceId"] = correlationId;
+        return problemDetails;
+    }
+
+    private static string GetCorrelationId(HttpContext httpContext)
+    {
+        return httpContext.Items.TryGetValue("CorrelationId", out var value) && value is string correlationId
+            ? correlationId
+            : httpContext.TraceIdentifier;
     }
 }
