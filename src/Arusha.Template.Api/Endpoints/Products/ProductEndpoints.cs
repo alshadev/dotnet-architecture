@@ -44,7 +44,7 @@ public sealed class ProductEndpoints : IEndpointModule
 
         return result.ToCreatedApiResponse(
             httpContext,
-            $"/api/v1/products/{result.Value}");
+            id => $"/api/v1/products/{id}");
     }
 
     private static async Task<IResult> GetProduct(

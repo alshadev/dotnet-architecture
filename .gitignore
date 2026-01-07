@@ -420,4 +420,4 @@ FodyWeavers.xsd
 # Local
 .github
 .vscode
-/src/Arusha.Template.Api/appsettings.Development.json
+/src/Arusha.Template.Api/appsettings.*.json

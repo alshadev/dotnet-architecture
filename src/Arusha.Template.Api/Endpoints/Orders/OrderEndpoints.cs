@@ -46,7 +46,7 @@ public sealed class OrderEndpoints : IEndpointModule
 
         return result.ToCreatedApiResponse(
             httpContext,
-            $"/api/v1/orders/{result.Value}");
+            id => $"/api/v1/orders/{id}");
     }
 
     private static async Task<IResult> GetOrder(

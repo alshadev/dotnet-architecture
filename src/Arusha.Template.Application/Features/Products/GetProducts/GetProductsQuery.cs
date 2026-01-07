@@ -14,10 +14,3 @@ public sealed record ProductListItem(
     int StockQuantity,
     bool IsActive,
     string Category);
-
-public sealed record PagedResponse<T>(
-    IReadOnlyList<T> Items,
-    int Page,
-    int PageSize,
-    int TotalCount,
-    int TotalPages);
