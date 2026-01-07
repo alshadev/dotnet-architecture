@@ -37,57 +37,37 @@ public sealed class ProductEndpoints : IEndpointModule
     private static async Task<IResult> CreateProduct(
         CreateProductCommand command,
         ISender sender,
+        HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
 
-        return result.Match(
-            productId => Results.Created($"/api/v1/products/{productId}", productId),
-            error => Results.Problem(
-                detail: error.Message,
-                statusCode: GetStatusCode(error),
-                title: error.Code));
+        return result.ToCreatedApiResponse(
+            httpContext,
+            $"/api/v1/products/{result.Value}");
     }
 
     private static async Task<IResult> GetProduct(
         Guid productId,
         ISender sender,
+        HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         var query = new GetProductQuery(productId);
         var result = await sender.Send(query, cancellationToken);
 
-        return result.Match(
-            product => Results.Ok(product),
-            error => Results.Problem(
-                detail: error.Message,
-                statusCode: GetStatusCode(error),
-                title: error.Code));
+        return result.ToApiResponse(httpContext);
     }
 
     private static async Task<IResult> GetProducts(
         [AsParameters] GetProductsQuery query,
         ISender sender,
+        HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(query, cancellationToken);
 
-        return result.Match(
-            products => Results.Ok(products),
-            error => Results.Problem(
-                detail: error.Message,
-                statusCode: GetStatusCode(error),
-                title: error.Code));
+        return result.ToPagedApiResponse(httpContext);
     }
 
-    private static int GetStatusCode(Error error)
-    {
-        return error.Code switch
-        {
-            var code when code.Contains("NotFound") => StatusCodes.Status404NotFound,
-            var code when code.Contains("Validation") => StatusCodes.Status400BadRequest,
-            var code when code.Contains("Conflict") => StatusCodes.Status409Conflict,
-            _ => StatusCodes.Status500InternalServerError
-        };
-    }
 }

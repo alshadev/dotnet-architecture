@@ -10,6 +10,13 @@ public class OrderEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
+    public async Task Health_check_should_pass()
+    {
+        var response = await _client.GetAsync("/health");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
     public async Task Create_and_get_order_successfully()
     {
         var command = new CreateOrderCommand(
@@ -24,16 +31,19 @@ public class OrderEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
         var createdEnvelope = await createResponse.Content.ReadFromJsonAsync<ApiResponse<Guid>>();
         createdEnvelope.Should().NotBeNull();
-        createdEnvelope!.Success.Should().BeTrue();
+        createdEnvelope!.CorrelationId.Should().NotBeNullOrEmpty();
         createdEnvelope.Data.Should().NotBe(Guid.Empty);
+        createdEnvelope.Meta.Should().NotBeNull();
+        createdEnvelope.Meta.ServerTime.Should().NotBeNullOrEmpty();
 
         var getResponse = await _client.GetAsync($"/api/v1/orders/{createdEnvelope.Data}");
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var orderEnvelope = await getResponse.Content.ReadFromJsonAsync<ApiResponse<OrderResponse>>();
 
         orderEnvelope.Should().NotBeNull();
-        orderEnvelope!.Success.Should().BeTrue();
+        orderEnvelope!.CorrelationId.Should().NotBeNullOrEmpty();
         orderEnvelope.Data!.Id.Should().Be(createdEnvelope.Data);
         orderEnvelope.Data.Items.Should().HaveCount(1);
+        orderEnvelope.Meta.Should().NotBeNull();
     }
 }

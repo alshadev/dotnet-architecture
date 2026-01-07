@@ -42,14 +42,11 @@ public sealed class OrderEndpoints : IEndpointModule
         HttpContext httpContext,
         CancellationToken cancellationToken)
     {
-        var correlationId = httpContext.Items["CorrelationId"] as string ?? httpContext.TraceIdentifier;
         var result = await sender.Send(command, cancellationToken);
 
-        return result.Match(
-            orderId => Results.Created($"/api/v1/orders/{orderId}", ApiResponse<Guid>.Ok(orderId, correlationId)),
-            error => Results.Json(
-                ApiResponse<string>.Fail(correlationId, error.Code, error.Message, GetStatusCode(error)),
-                statusCode: GetStatusCode(error)));
+        return result.ToCreatedApiResponse(
+            httpContext,
+            $"/api/v1/orders/{result.Value}");
     }
 
     private static async Task<IResult> GetOrder(
@@ -58,15 +55,10 @@ public sealed class OrderEndpoints : IEndpointModule
         HttpContext httpContext,
         CancellationToken cancellationToken)
     {
-        var correlationId = httpContext.Items["CorrelationId"] as string ?? httpContext.TraceIdentifier;
         var query = new GetOrderQuery(orderId);
         var result = await sender.Send(query, cancellationToken);
 
-        return result.Match(
-            order => Results.Ok(ApiResponse<OrderResponse>.Ok(order, correlationId)),
-            error => Results.Json(
-                ApiResponse<string>.Fail(correlationId, error.Code, error.Message, GetStatusCode(error)),
-                statusCode: GetStatusCode(error)));
+        return result.ToApiResponse(httpContext);
     }
 
     private static async Task<IResult> ConfirmOrder(
@@ -75,27 +67,10 @@ public sealed class OrderEndpoints : IEndpointModule
         HttpContext httpContext,
         CancellationToken cancellationToken)
     {
-        var correlationId = httpContext.Items["CorrelationId"] as string ?? httpContext.TraceIdentifier;
         var command = new ConfirmOrderCommand(orderId);
         var result = await sender.Send(command, cancellationToken);
 
-        return result.Match(
-            () => Results.Ok(ApiResponse<string>.Ok("Confirmed", correlationId)),
-            error => Results.Json(
-                ApiResponse<string>.Fail(correlationId, error.Code, error.Message, GetStatusCode(error)),
-                statusCode: GetStatusCode(error)));
+        return result.ToApiResponse(httpContext, "Order confirmed successfully");
     }
 
-    private static int GetStatusCode(Error error)
-    {
-        return error.Code switch
-        {
-            var code when code.Contains("NotFound") => StatusCodes.Status404NotFound,
-            var code when code.Contains("Validation") => StatusCodes.Status400BadRequest,
-            var code when code.Contains("Conflict") => StatusCodes.Status409Conflict,
-            var code when code.Contains("Unauthorized") => StatusCodes.Status401Unauthorized,
-            var code when code.Contains("Forbidden") => StatusCodes.Status403Forbidden,
-            _ => StatusCodes.Status500InternalServerError
-        };
-    }
 }

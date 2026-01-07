@@ -8,25 +8,29 @@ builder.Host.UseSerilog((context, config) =>
 
 // Add services
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
 
-// Auth
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.RequireHttpsMetadata = false;
-        options.SaveToken = true;
-        options.TokenValidationParameters = new TokenValidationParameters
+// Skip Infrastructure and Auth for Test environment (configured by integration tests)
+if (!builder.Environment.IsEnvironment("Test"))
+{
+    builder.Services.AddInfrastructure(builder.Configuration);
+
+    builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
         {
-            ValidateIssuer = false,
-            ValidateAudience = false,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "dev-signing-key"))
-        };
-    });
+            options.RequireHttpsMetadata = false;
+            options.SaveToken = true;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "dev-signing-key"))
+            };
+        });
+}
 
 builder.Services.AddAuthorization();
 
