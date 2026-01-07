@@ -10,6 +10,13 @@ public class OrderEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
+    public async Task Health_check_should_pass()
+    {
+        var response = await _client.GetAsync("/health");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
     public async Task Create_and_get_order_successfully()
     {
         var command = new CreateOrderCommand(

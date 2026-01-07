@@ -58,8 +58,18 @@ public class ConventionTests
     [Fact]
     public void Entities_Should_Have_Private_Setters()
     {
-        // Auditable properties that are allowed to have public setters (for EF Core)
-        var auditableProperties = new[] { "CreatedOnUtc", "ModifiedOnUtc" };
+        // Get all property names from infrastructure interfaces (allowed to have public setters)
+        var auditableProperties = typeof(Domain.Abstractions.IAuditableEntity)
+            .GetProperties()
+            .Select(p => p.Name)
+            .ToHashSet();
+
+        var softDeletableProperties = typeof(Domain.Abstractions.ISoftDeletable)
+            .GetProperties()
+            .Select(p => p.Name)
+            .ToHashSet();
+
+        var infrastructureProperties = auditableProperties.Union(softDeletableProperties).ToHashSet();
         
         var entityTypes = Types.InAssembly(DomainAssembly)
             .That()
@@ -70,10 +80,10 @@ public class ConventionTests
         {
             var properties = entityType.GetProperties()
                 .Where(p => p.CanWrite && p.SetMethod?.IsPublic == true)
-                .Where(p => !auditableProperties.Contains(p.Name)); // Exclude auditable properties
+                .Where(p => !infrastructureProperties.Contains(p.Name)); // Exclude infrastructure properties
 
             properties.Should().BeEmpty(
-                $"Entity '{entityType.Name}' should not have public setters (except auditable properties)");
+                $"Entity '{entityType.Name}' should not have public setters (except infrastructure properties: {string.Join(", ", infrastructureProperties)})");
         }
     }
 

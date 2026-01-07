@@ -14,7 +14,7 @@ public sealed class OrderItem : Entity<OrderItemId>
     /// <summary>
     /// Calculated property for total price.
     /// </summary>
-    public Money TotalPrice => UnitPrice.Multiply(Quantity);
+    public Money TotalPrice => UnitPrice?.Multiply(Quantity);
 
     private OrderItem(OrderItemId id, Guid productId, string productName, int quantity, Money unitPrice)
         : base(id)
