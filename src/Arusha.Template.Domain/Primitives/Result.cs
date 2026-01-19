@@ -1,4 +1,4 @@
-namespace Arusha.Template.Application.Results;
+﻿namespace Arusha.Template.Domain.Primitives;
 
 /// <summary>
 /// Represents the result of an operation that can either succeed or fail.
@@ -69,6 +69,32 @@ public class Result
     /// Implicitly converts an error to a failed result.
     /// </summary>
     public static implicit operator Result(Error error) => Failure(error);
+
+    /// <summary>
+    /// Executes an action if the result is successful.
+    /// </summary>
+    public Result OnSuccess(Action action)
+    {
+        if (IsSuccess)
+            action();
+        return this;
+    }
+
+    /// <summary>
+    /// Executes an action if the result is a failure.
+    /// </summary>
+    public Result OnFailure(Action<Error> action)
+    {
+        if (IsFailure)
+            action(Error);
+        return this;
+    }
+
+    /// <summary>
+    /// Pattern matching method for Result.
+    /// </summary>
+    public TResult Match<TResult>(Func<TResult> onSuccess, Func<Error, TResult> onFailure)
+        => IsSuccess ? onSuccess() : onFailure(Error);
 }
 
 /// <summary>
@@ -79,7 +105,7 @@ public class Result<TValue> : Result
 {
     private readonly TValue _value;
 
-    internal Result(TValue value, bool isSuccess, Error error)
+    public Result(TValue value, bool isSuccess, Error error)
         : base(isSuccess, error)
     {
         _value = value;
@@ -95,6 +121,11 @@ public class Result<TValue> : Result
             : throw new InvalidOperationException("Cannot access value of a failed result.");
 
     /// <summary>
+    /// Gets the value or a default if failed.
+    /// </summary>
+    public TValue ValueOrDefault => IsSuccess ? _value : default;
+
+    /// <summary>
     /// Implicitly converts a value to a successful result.
     /// </summary>
     public static implicit operator Result<TValue>(TValue value) =>
@@ -104,4 +135,22 @@ public class Result<TValue> : Result
     /// Implicitly converts an error to a failed result.
     /// </summary>
     public static implicit operator Result<TValue>(Error error) => Failure<TValue>(error);
+
+    /// <summary>
+    /// Maps the value to a new result if successful.
+    /// </summary>
+    public Result<TNew> Map<TNew>(Func<TValue, TNew> mapper)
+        => IsSuccess ? Success(mapper(_value!)) : Failure<TNew>(Error);
+
+    /// <summary>
+    /// Binds the value to a new result if successful.
+    /// </summary>
+    public Result<TNew> Bind<TNew>(Func<TValue, Result<TNew>> binder)
+        => IsSuccess ? binder(_value!) : Failure<TNew>(Error);
+
+    /// <summary>
+    /// Pattern matching method for Result with value.
+    /// </summary>
+    public TResult Match<TResult>(Func<TValue, TResult> onSuccess, Func<Error, TResult> onFailure)
+        => IsSuccess ? onSuccess(_value!) : onFailure(Error);
 }

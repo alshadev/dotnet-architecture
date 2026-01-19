@@ -72,6 +72,31 @@ public static class ResultExtensions
     }
 
     /// <summary>
+    /// Converts a Result to a Created response with ApiResponse envelope.
+    /// The location URI is built using the result value only on success.
+    /// </summary>
+    public static IResult ToCreatedApiResponse<T>(
+        this Result<T> result,
+        HttpContext httpContext,
+        Func<T, string> locationUriFactory)
+    {
+        var correlationId = GetCorrelationId(httpContext);
+
+        return result.Match(
+            data => Results.Created(locationUriFactory(data), new ApiResponse<T>
+            {
+                CorrelationId = correlationId,
+                Data = data,
+                Meta = new ApiResponseMeta
+                {
+                    ServerTime = DateTime.UtcNow.ToString("O"),
+                    TraceId = correlationId
+                }
+            }),
+            error => CreateProblemResult(error, httpContext, correlationId));
+    }
+
+    /// <summary>
     /// Converts a Result of PagedResponse to a PagedApiResponse.
     /// </summary>
     public static IResult ToPagedApiResponse<T>(
@@ -109,7 +134,7 @@ public static class ResultExtensions
     /// </summary>
     private static IResult CreateProblemResult(Error error, HttpContext httpContext, string correlationId)
     {
-        var statusCode = GetStatusCode(error);
+        var statusCode = MapErrorTypeToStatusCode(error.Type);
 
         var problemDetails = new ProblemDetails
         {
@@ -125,21 +150,40 @@ public static class ResultExtensions
         return Results.Problem(problemDetails);
     }
 
-    /// <summary>
-    /// Maps Error codes to HTTP status codes.
-    /// </summary>
-    private static int GetStatusCode(Error error)
+    private static int MapErrorTypeToStatusCode(ErrorType errorType) => errorType switch
     {
-        return error.Code switch
-        {
-            var code when code.Contains("NotFound") => StatusCodes.Status404NotFound,
-            var code when code.Contains("Validation") => StatusCodes.Status400BadRequest,
-            var code when code.Contains("Conflict") => StatusCodes.Status409Conflict,
-            var code when code.Contains("Unauthorized") => StatusCodes.Status401Unauthorized,
-            var code when code.Contains("Forbidden") => StatusCodes.Status403Forbidden,
-            _ => StatusCodes.Status500InternalServerError
-        };
-    }
+        // 400 Bad Request
+        ErrorType.Validation or
+        ErrorType.InvalidInput or
+        ErrorType.InvalidOperation or
+        ErrorType.BusinessRuleViolation => StatusCodes.Status400BadRequest,
+
+        // 404 Not Found
+        ErrorType.NotFound => StatusCodes.Status404NotFound,
+
+        // 409 Conflict
+        ErrorType.Conflict or
+        ErrorType.AlreadyExists or
+        ErrorType.ConcurrencyConflict => StatusCodes.Status409Conflict,
+
+        // 401 Unauthorized
+        ErrorType.Unauthorized or
+        ErrorType.TokenExpired or
+        ErrorType.InvalidCredentials => StatusCodes.Status401Unauthorized,
+
+        // 403 Forbidden
+        ErrorType.Forbidden or
+        ErrorType.InsufficientPermissions => StatusCodes.Status403Forbidden,
+
+        // 422 Unprocessable Entity
+        ErrorType.Unprocessable => StatusCodes.Status422UnprocessableEntity,
+
+        // 503 Service Unavailable
+        ErrorType.ServiceUnavailable => StatusCodes.Status503ServiceUnavailable,
+
+        // 500 Internal Server Error (default)
+        ErrorType.Failure or _ => StatusCodes.Status500InternalServerError
+    };
 
     /// <summary>
     /// Gets the RFC 7807 problem type URI for a status code.
