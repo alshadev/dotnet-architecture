@@ -12,8 +12,12 @@ public sealed class ApplicationDbContext : IdentityDbContext<IdentityUser>, IApp
     private readonly IMediator _mediator = null;
     private readonly ILogger<ApplicationDbContext> _logger = null;
     private readonly ICurrentUserService _currentUser = null;
+    private readonly IDateTimeProvider _dateTimeProvider = null;
     private IDbContextTransaction _currentTransaction = null;
 
+    /// <summary>
+    /// Design-time constructor for EF Core migrations tooling.
+    /// </summary>
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
@@ -23,12 +27,14 @@ public sealed class ApplicationDbContext : IdentityDbContext<IdentityUser>, IApp
         DbContextOptions<ApplicationDbContext> options,
         IMediator mediator,
         ILogger<ApplicationDbContext> logger,
-        ICurrentUserService currentUser)
+        ICurrentUserService currentUser,
+        IDateTimeProvider dateTimeProvider)
         : base(options)
     {
         _mediator = mediator;
         _logger = logger;
         _currentUser = currentUser;
+        _dateTimeProvider = dateTimeProvider;
     }
 
     public DbSet<Order> Orders => Set<Order>();
@@ -51,7 +57,7 @@ public sealed class ApplicationDbContext : IdentityDbContext<IdentityUser>, IApp
         modelBuilder.Entity<IdentityUserToken<string>>().ToTable("UserTokens");
         modelBuilder.Entity<IdentityRoleClaim<string>>().ToTable("RoleClaims");
 
-        // Apply soft-delete filter to all soft-deletable entities
+        // Apply soft-delete filter and concurrency tokens to domain entities
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             if (typeof(ISoftDeletable).IsAssignableFrom(entityType.ClrType))
@@ -61,6 +67,15 @@ public sealed class ApplicationDbContext : IdentityDbContext<IdentityUser>, IApp
                 var compareExpression = Expression.Equal(property, Expression.Constant(false));
                 var lambda = Expression.Lambda(compareExpression, parameter);
                 entityType.SetQueryFilter(lambda);
+            }
+
+            // Configure RowVersion as concurrency token for all domain entities
+            if (entityType.ClrType.GetProperty("RowVersion") is not null
+                && IsEntityType(entityType.ClrType))
+            {
+                modelBuilder.Entity(entityType.ClrType)
+                    .Property("RowVersion")
+                    .IsRowVersion();
             }
         }
 
@@ -149,7 +164,7 @@ public sealed class ApplicationDbContext : IdentityDbContext<IdentityUser>, IApp
         var entries = ChangeTracker.Entries<IAuditableEntity>()
             .Where(e => e.State is EntityState.Added or EntityState.Modified);
 
-        var utcNow = DateTime.UtcNow;
+        var utcNow = _dateTimeProvider?.UtcNow ?? DateTime.UtcNow;
         var userId = _currentUser?.UserId ?? "system";
 
         foreach (var entry in entries)
@@ -172,7 +187,7 @@ public sealed class ApplicationDbContext : IdentityDbContext<IdentityUser>, IApp
         var softDeleteEntries = ChangeTracker.Entries<ISoftDeletable>()
             .Where(e => e.State == EntityState.Deleted);
 
-        var utcNow = DateTime.UtcNow;
+        var utcNow = _dateTimeProvider?.UtcNow ?? DateTime.UtcNow;
         var userId = _currentUser?.UserId ?? "system";
 
         foreach (var entry in softDeleteEntries)
@@ -186,7 +201,7 @@ public sealed class ApplicationDbContext : IdentityDbContext<IdentityUser>, IApp
 
     private List<AuditTrail> BuildAuditEntries()
     {
-        var utcNow = DateTime.UtcNow;
+        var utcNow = _dateTimeProvider?.UtcNow ?? DateTime.UtcNow;
         var userId = _currentUser?.UserId ?? "system";
 
         var entries = ChangeTracker.Entries()
@@ -287,5 +302,22 @@ public sealed class ApplicationDbContext : IdentityDbContext<IdentityUser>, IApp
         {
             aggregateRoot.ClearDomainEvents();
         }
+    }
+
+    /// <summary>
+    /// Checks if a type inherits from Entity&lt;TId&gt; anywhere in its hierarchy.
+    /// </summary>
+    private static bool IsEntityType(Type type)
+    {
+        var current = type.BaseType;
+        while (current is not null)
+        {
+            if (current.IsGenericType && current.GetGenericTypeDefinition() == typeof(Entity<>))
+            {
+                return true;
+            }
+            current = current.BaseType;
+        }
+        return false;
     }
 }

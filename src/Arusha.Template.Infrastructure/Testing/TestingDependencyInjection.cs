@@ -34,6 +34,7 @@ public static class TestingDependencyInjection
         // Context accessors
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddSingleton<IDateTimeProvider, Common.DateTimeProvider>();
 
         // Repositories
         services.AddScoped<IOrderRepository, OrderRepository>();

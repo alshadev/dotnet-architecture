@@ -13,6 +13,12 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
     /// </summary>
     public TId Id { get; protected init; } = default!;
 
+    /// <summary>
+    /// Concurrency token for optimistic concurrency control.
+    /// Automatically managed by EF Core; prevents lost updates in concurrent scenarios.
+    /// </summary>
+    public byte[] RowVersion { get; set; }
+
     protected Entity(TId id)
     {
         Id = id;

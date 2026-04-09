@@ -50,7 +50,7 @@ public sealed class OutboxProcessor : BackgroundService
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         var messages = await dbContext.OutboxMessages
-            .Where(m => m.ProcessedOnUtc == default && m.RetryCount < _maxRetries)
+            .Where(m => m.ProcessedOnUtc == null && m.RetryCount < _maxRetries)
             .OrderBy(m => m.OccurredOnUtc)
             .Take(_batchSize)
             .ToListAsync(cancellationToken);

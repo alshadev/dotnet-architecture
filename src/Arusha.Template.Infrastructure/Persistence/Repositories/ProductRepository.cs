@@ -42,6 +42,36 @@ internal sealed class ProductRepository(ApplicationDbContext context) : IProduct
             .AnyAsync(p => p.Sku == sku, cancellationToken);
     }
 
+    public async Task<(IReadOnlyList<Product> Items, int TotalCount)> GetPagedAsync(
+        string category,
+        bool onlyActive,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = context.Products.AsQueryable();
+
+        if (onlyActive)
+        {
+            query = query.Where(p => p.IsActive);
+        }
+
+        if (!string.IsNullOrEmpty(category))
+        {
+            query = query.Where(p => p.Category == category);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .OrderBy(p => p.Name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
+    }
+
     public void Add(Product product)
     {
         context.Products.Add(product);

@@ -25,6 +25,7 @@ public static class DependencyInjection
         // Context accessors
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddSingleton<IDateTimeProvider, Common.DateTimeProvider>();
 
         // Repositories
         services.AddScoped<IOrderRepository, OrderRepository>();

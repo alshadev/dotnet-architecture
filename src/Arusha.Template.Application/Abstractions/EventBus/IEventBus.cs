@@ -1,4 +1,4 @@
-namespace Arusha.Template.Infrastructure.EventBus;
+namespace Arusha.Template.Application.Abstractions.EventBus;
 
 /// <summary>
 /// Abstraction for publishing integration events.

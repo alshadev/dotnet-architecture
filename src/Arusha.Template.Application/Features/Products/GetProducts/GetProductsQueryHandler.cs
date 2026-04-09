@@ -8,27 +8,14 @@ internal sealed class GetProductsQueryHandler(
         GetProductsQuery request,
         CancellationToken cancellationToken)
     {
-        IReadOnlyList<Product> products;
+        var (products, totalCount) = await productRepository.GetPagedAsync(
+            request.Category,
+            request.OnlyActive,
+            request.Page,
+            request.PageSize,
+            cancellationToken);
 
-        if (!string.IsNullOrEmpty(request.Category))
-        {
-            products = await productRepository.GetByCategoryAsync(request.Category, cancellationToken);
-        }
-        else if (request.OnlyActive)
-        {
-            products = await productRepository.GetAllActiveAsync(cancellationToken);
-        }
-        else
-        {
-            // For simplicity, returning active only when no filter
-            products = await productRepository.GetAllActiveAsync(cancellationToken);
-        }
-
-        // In-memory pagination (in production, use specification pattern with DB pagination)
-        var totalCount = products.Count;
-        var pagedItems = products
-            .Skip((request.Page - 1) * request.PageSize)
-            .Take(request.PageSize)
+        var items = products
             .Select(p => new ProductListItem(
                 p.Id.Value,
                 p.Name,
@@ -42,7 +29,7 @@ internal sealed class GetProductsQueryHandler(
         var totalPages = (int)Math.Ceiling(totalCount / (double)request.PageSize);
 
         return new PagedResponse<ProductListItem>(
-            pagedItems,
+            items,
             request.Page,
             request.PageSize,
             totalCount,

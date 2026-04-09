@@ -10,7 +10,7 @@ public sealed class OutboxMessage
     public string Type { get; private set; } = default!;
     public string Content { get; private set; } = default!;
     public DateTime OccurredOnUtc { get; private set; }
-    public DateTime ProcessedOnUtc { get; private set; }
+    public DateTime? ProcessedOnUtc { get; private set; }
     public string Error { get; private set; }
     public int RetryCount { get; private set; }
 

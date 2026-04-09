@@ -11,5 +11,6 @@ global using NSubstitute;
 global using Arusha.Template.Domain.Abstractions;
 global using Arusha.Template.Domain.Primitives;
 global using Arusha.Template.Domain.Orders;
+global using Arusha.Template.Domain.Orders.Events;
 
 global using Arusha.Template.Application.Results;

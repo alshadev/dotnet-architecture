@@ -32,4 +32,6 @@ global using System.Linq;
 global using System.Net;
 global using System.Text;
 global using System.Threading;
+global using System.Threading.RateLimiting;
 global using System.Threading.Tasks;
+global using Microsoft.AspNetCore.RateLimiting;

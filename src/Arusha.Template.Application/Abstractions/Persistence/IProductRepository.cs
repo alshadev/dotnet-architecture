@@ -35,6 +35,17 @@ public interface IProductRepository
     Task<IReadOnlyList<Product>> GetByCategoryAsync(string category, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets a paginated list of products with optional filtering.
+    /// Pagination is performed at the database level for efficiency.
+    /// </summary>
+    Task<(IReadOnlyList<Product> Items, int TotalCount)> GetPagedAsync(
+        string category,
+        bool onlyActive,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Checks if a product with the given SKU already exists.
     /// Useful for validation before creating new products.
     /// </summary>

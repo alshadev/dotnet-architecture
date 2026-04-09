@@ -26,7 +26,7 @@ public class ConventionTests
     }
 
     [Fact]
-    public void Command_Handlers_Should_Have_Handler_Suffix()
+    public void Handlers_In_Features_Should_Be_Sealed()
     {
         var result = Types.InAssembly(ApplicationAssembly)
             .That()
@@ -69,7 +69,16 @@ public class ConventionTests
             .Select(p => p.Name)
             .ToHashSet();
 
-        var infrastructureProperties = auditableProperties.Union(softDeletableProperties).ToHashSet();
+        // RowVersion is managed by EF Core for optimistic concurrency
+        var baseEntityProperties = typeof(Domain.Primitives.Entity<>)
+            .GetProperties()
+            .Select(p => p.Name)
+            .ToHashSet();
+
+        var infrastructureProperties = auditableProperties
+            .Union(softDeletableProperties)
+            .Union(baseEntityProperties)
+            .ToHashSet();
         
         var entityTypes = Types.InAssembly(DomainAssembly)
             .That()
