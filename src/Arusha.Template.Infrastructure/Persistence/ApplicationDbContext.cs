@@ -9,11 +9,11 @@ namespace Arusha.Template.Infrastructure.Persistence;
 /// </summary>
 public sealed class ApplicationDbContext : IdentityDbContext<IdentityUser>, IApplicationDbContext, IUnitOfWork
 {
-    private readonly IMediator _mediator = null;
-    private readonly ILogger<ApplicationDbContext> _logger = null;
-    private readonly ICurrentUserService _currentUser = null;
-    private readonly IDateTimeProvider _dateTimeProvider = null;
-    private IDbContextTransaction _currentTransaction = null;
+    private readonly IMediator _mediator;
+    private readonly ILogger<ApplicationDbContext> _logger;
+    private readonly ICurrentUserService _currentUser;
+    private readonly IDateTimeProvider _dateTimeProvider;
+    private IDbContextTransaction _currentTransaction;
 
     /// <summary>
     /// Design-time constructor for EF Core migrations tooling.

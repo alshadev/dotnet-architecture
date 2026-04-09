@@ -164,3 +164,24 @@ dotnet_naming_symbols.async_methods.required_modifiers = async
 
 dotnet_naming_style.end_with_async.required_suffix = Async
 dotnet_naming_style.end_with_async.capitalization = pascal_case
+
+# Ignore unnecessary suffixes severity
+dotnet_diagnostic.CA1711.severity = none
+
+# Allow 'Error' type name even though it's a reserved keyword (deliberate DDD naming)
+dotnet_diagnostic.CA1716.severity = none
+
+# Allow static members on generic types (standard Result<T> pattern)
+dotnet_diagnostic.CA1000.severity = none
+
+# Allow parameter name mismatches on overrides (e.g. modelBuilder vs builder)
+dotnet_diagnostic.CA1725.severity = none
+
+# Allow constant array arguments in auto-generated code (EF migrations)
+dotnet_diagnostic.CA1861.severity = none
+
+# Allow direct logger extension methods instead of LoggerMessage delegates
+dotnet_diagnostic.CA1848.severity = none
+
+# Suppress CancellationToken forwarding false positives (MediatR delegates don't accept CancellationToken)
+dotnet_diagnostic.CA2016.severity = none
