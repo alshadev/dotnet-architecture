@@ -26,7 +26,7 @@ public sealed class TransactionBehavior<TRequest, TResponse>(
             return await next();
         }
 
-        var requestName = typeof(TRequest).Name;
+        string requestName = typeof(TRequest).Name;
 
         logger.LogDebug(
             "Beginning transaction for {RequestName}",
@@ -64,7 +64,7 @@ public sealed class TransactionBehavior<TRequest, TResponse>(
     {
         return typeof(TRequest).GetInterfaces().Any(i =>
             i.IsGenericType &&
-            (i.GetGenericTypeDefinition() == typeof(Abstractions.Messaging.ICommand<>) ||
-             i == typeof(Abstractions.Messaging.ICommand)));
+            (i.GetGenericTypeDefinition() == typeof(ICommand<>) ||
+             i == typeof(ICommand)));
     }
 }

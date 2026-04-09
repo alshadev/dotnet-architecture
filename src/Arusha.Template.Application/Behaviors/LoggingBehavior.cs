@@ -16,7 +16,7 @@ public sealed class LoggingBehavior<TRequest, TResponse>(
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        var requestName = typeof(TRequest).Name;
+        string requestName = typeof(TRequest).Name;
 
         logger.LogInformation(
             "Processing request {RequestName}: {@Request}",

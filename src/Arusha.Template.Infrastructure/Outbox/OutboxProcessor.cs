@@ -89,7 +89,7 @@ public sealed class OutboxProcessor : BackgroundService
                     continue;
                 }
 
-                await _eventBus.PublishAsync(domainEvent, cancellationToken);
+                // await _eventBus.PublishAsync(domainEvent, cancellationToken);
 
                 message.MarkAsProcessed();
 

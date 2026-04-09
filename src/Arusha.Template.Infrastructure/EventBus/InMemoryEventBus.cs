@@ -1,3 +1,5 @@
+using Arusha.Template.Domain.IntegrationEventLogs;
+
 namespace Arusha.Template.Infrastructure.EventBus;
 
 /// <summary>
@@ -16,34 +18,10 @@ public sealed class InMemoryEventBus(
     IMediator mediator,
     ILogger<InMemoryEventBus> logger) : IEventBus
 {
-    public async Task PublishAsync<T>(T integrationEvent, CancellationToken cancellationToken = default)
-        where T : IDomainEvent
-    {
-        var eventType = integrationEvent.GetType().Name;
-
-        logger.LogInformation(
-            "Publishing integration event {EventType} with ID {EventId}",
-            eventType,
-            integrationEvent.Id);
-
-        try
-        {
-            // Dispatch via MediatR to all registered handlers
-            await mediator.Publish(integrationEvent, cancellationToken);
-
-            logger.LogDebug(
-                "Successfully published integration event {EventType}",
-                eventType);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(
-                ex,
-                "Failed to publish integration event {EventType}: {Error}",
-                eventType,
-                ex.Message);
-
-            throw;
-        }
-    }
+    public Task PublishAsync<T>(T @event) where T : IntegrationEvent => throw new NotImplementedException();
+    public Task ReprocessSubscriptionAsync<T>(T eventLog) where T : IntegrationEventLog => throw new NotImplementedException();
+    public Task RepublishAsync<T>(T eventLog) where T : IntegrationEventLog => throw new NotImplementedException();
+    public Task SubscribeAsync<T, TH>(string serviceName)
+        where T : IntegrationEvent
+        where TH : IIntegrationEventHandler<T> => throw new NotImplementedException();
 }
