@@ -48,6 +48,8 @@ public sealed class ApplicationDbContext : IdentityDbContext<IdentityUser>, IApp
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.UseIntegrationEventLog();
+
         // Override ASP.NET Core Identity table names
         modelBuilder.Entity<IdentityUser>().ToTable("Users");
         modelBuilder.Entity<IdentityRole>().ToTable("Roles");

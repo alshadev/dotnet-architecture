@@ -121,6 +121,9 @@ app.UseAuthorization();
 // Map endpoints
 app.MapEndpointModules();
 
+// Subscribe to integration events
+app.SubscribeEvent("template");
+
 // Health check endpoint
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
