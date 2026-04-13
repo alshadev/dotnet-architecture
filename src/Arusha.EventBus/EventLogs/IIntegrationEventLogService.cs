@@ -1,6 +1,4 @@
-using Arusha.Template.Domain.IntegrationEventLogs;
-
-namespace Arusha.Template.Domain.Primitives;
+namespace Arusha.EventBus;
 
 public interface IIntegrationEventLogService
 {

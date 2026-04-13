@@ -100,7 +100,7 @@ public class OrderTests
         order.Confirm();
 
         order.DomainEvents.Should().Contain(e =>
-            e is OrderConfirmedIntegrationEvent);
+            e is OrderConfirmedDomainEvent);
     }
 
     [Fact]

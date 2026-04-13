@@ -1,6 +1,5 @@
-namespace Arusha.Template.Domain.IntegrationEventLogs;
+namespace Arusha.EventBus;
 
-// Composite primary key with eventid, type and event handler type
 public class IntegrationEventLog
 {
     public Guid EventId { get; set; }
@@ -16,7 +15,7 @@ public class IntegrationEventLog
     public void Processed()
     {
         if (Status != IntegrationEventLogStatus.Processing)
-            throw new ArgumentException("Cannot mark an event as processed if it is not currently being processed.");
+            throw new InvalidOperationException("Cannot mark as processed if not currently processing.");
 
         Status = IntegrationEventLogStatus.Processed;
     }
@@ -24,7 +23,7 @@ public class IntegrationEventLog
     public void Failed(string remark)
     {
         if (Status != IntegrationEventLogStatus.Processing)
-            throw new ArgumentException("Cannot mark an event as failed if it is not currently being processed.");
+            throw new InvalidOperationException("Cannot mark as failed if not currently processing.");
 
         Status = IntegrationEventLogStatus.Failed;
         Remark = remark;
@@ -33,7 +32,7 @@ public class IntegrationEventLog
     public void Retry()
     {
         if (Status == IntegrationEventLogStatus.Processing)
-            throw new ArgumentException("Cannot retry an event that is currently being processed.");
+            throw new InvalidOperationException("Cannot retry an event that is currently processing.");
 
         LastAttemptOnUtc = DateTime.UtcNow;
         Status = IntegrationEventLogStatus.Processing;

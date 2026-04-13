@@ -13,16 +13,7 @@ public static class ResultExtensions
         var correlationId = GetCorrelationId(httpContext);
 
         return result.Match(
-            data => Results.Ok(new ApiResponse<T>
-            {
-                CorrelationId = correlationId,
-                Data = data,
-                Meta = new ApiResponseMeta
-                {
-                    ServerTime = DateTime.UtcNow.ToString("O"),
-                    TraceId = correlationId
-                }
-            }),
+            data => Results.Ok(CreateEnvelope(data, correlationId)),
             error => CreateProblemResult(error, httpContext, correlationId));
     }
 
@@ -34,16 +25,7 @@ public static class ResultExtensions
         var correlationId = GetCorrelationId(httpContext);
 
         return result.Match(
-            () => Results.Ok(new ApiResponse<string>
-            {
-                CorrelationId = correlationId,
-                Data = successMessage,
-                Meta = new ApiResponseMeta
-                {
-                    ServerTime = DateTime.UtcNow.ToString("O"),
-                    TraceId = correlationId
-                }
-            }),
+            () => Results.Ok(CreateEnvelope(successMessage, correlationId)),
             error => CreateProblemResult(error, httpContext, correlationId));
     }
 
@@ -58,16 +40,7 @@ public static class ResultExtensions
         var correlationId = GetCorrelationId(httpContext);
 
         return result.Match(
-            data => Results.Created(locationUri, new ApiResponse<T>
-            {
-                CorrelationId = correlationId,
-                Data = data,
-                Meta = new ApiResponseMeta
-                {
-                    ServerTime = DateTime.UtcNow.ToString("O"),
-                    TraceId = correlationId
-                }
-            }),
+            data => Results.Created(locationUri, CreateEnvelope(data, correlationId)),
             error => CreateProblemResult(error, httpContext, correlationId));
     }
 
@@ -83,16 +56,7 @@ public static class ResultExtensions
         var correlationId = GetCorrelationId(httpContext);
 
         return result.Match(
-            data => Results.Created(locationUriFactory(data), new ApiResponse<T>
-            {
-                CorrelationId = correlationId,
-                Data = data,
-                Meta = new ApiResponseMeta
-                {
-                    ServerTime = DateTime.UtcNow.ToString("O"),
-                    TraceId = correlationId
-                }
-            }),
+            data => Results.Created(locationUriFactory(data), CreateEnvelope(data, correlationId)),
             error => CreateProblemResult(error, httpContext, correlationId));
     }
 
@@ -117,6 +81,20 @@ public static class ResultExtensions
                 }
             }),
             error => CreateProblemResult(error, httpContext, correlationId));
+    }
+
+    private static ApiResponse<T> CreateEnvelope<T>(T data, string correlationId)
+    {
+        return new ApiResponse<T>
+        {
+            CorrelationId = correlationId,
+            Data = data,
+            Meta = new ApiResponseMeta
+            {
+                ServerTime = DateTime.UtcNow.ToString("O"),
+                TraceId = correlationId
+            }
+        };
     }
 
     /// <summary>

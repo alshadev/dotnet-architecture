@@ -1,32 +1,32 @@
-using System.Text;
-using Arusha.Template.Domain.IntegrationEventLogs;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 
-namespace Arusha.Template.Infrastructure.EventBus;
+namespace Arusha.EventBus.Providers;
 
-public sealed class AzureServiceBusEventBus(
-    ServiceBusAdministrationClient administrationClient
-    , ServiceBusClient client
-    , IServiceProvider serviceProvider
-    , ILogger<AzureServiceBusEventBus> logger) : IEventBus
+internal sealed class AzureServiceBusEventBus(
+    ServiceBusAdministrationClient administrationClient,
+    ServiceBusClient client,
+    IServiceProvider serviceProvider,
+    ILogger<AzureServiceBusEventBus> logger) : IEventBus
 {
     private readonly Dictionary<string, (ServiceBusProcessor Processor, Type HandlerType)> _processors = [];
+
     private static readonly Lazy<Dictionary<string, Type>> _eventNameCache = new(() => AppDomain
         .CurrentDomain
         .GetAssemblies()
         .SelectMany(a => a.GetTypes())
         .Where(t => typeof(IntegrationEvent).IsAssignableFrom(t) && !t.IsAbstract)
         .ToDictionary(t => t.Name, t => t));
-    private static bool TryGetEventType(string eventName, out Type eventType) => _eventNameCache.Value.TryGetValue(eventName, out eventType);
+
+    private static bool TryGetEventType(string eventName, out Type eventType)
+        => _eventNameCache.Value.TryGetValue(eventName, out eventType);
 
     public async Task PublishAsync<T>(T @event) where T : IntegrationEvent
     {
         using var scope = serviceProvider.CreateScope();
+        var logService = scope.ServiceProvider.GetRequiredService<IIntegrationEventLogService>();
 
-        var integrationEventLogService = scope.ServiceProvider.GetRequiredService<IIntegrationEventLogService>();
-
-        await integrationEventLogService.AddOrSetRetryPublisherLogAsync(@event);
+        await logService.AddOrSetRetryPublisherLogAsync(@event);
 
         string eventName = @event.GetType().Name;
 
@@ -40,19 +40,18 @@ public sealed class AzureServiceBusEventBus(
             };
 
             await sender.SendMessageAsync(message);
-
-            await integrationEventLogService.MarkAsProcessedAsync(@event.Id, IntegrationEventLogType.Publisher, string.Empty);
+            await logService.MarkAsProcessedAsync(@event.Id, IntegrationEventLogType.Publisher, string.Empty);
 
             logger.LogInformation("Published event {EventId} of name {EventName} (mark as processed)", @event.Id, eventName);
         }
         catch (Exception ex)
         {
-            await integrationEventLogService.MarkAsFailedAsync(@event.Id, IntegrationEventLogType.Publisher, string.Empty, ex.Message);
-
+            await logService.MarkAsFailedAsync(@event.Id, IntegrationEventLogType.Publisher, string.Empty, ex.Message);
             logger.LogError(ex, "Failed to publish event {EventId} of name {EventName} (mark as failed)", @event.Id, eventName);
         }
     }
-    public async Task RepublishAsync<T>(T eventLog) where T : IntegrationEventLog
+
+    public async Task RepublishAsync(IntegrationEventLog eventLog)
     {
         if (eventLog.Type != IntegrationEventLogType.Publisher)
         {
@@ -66,29 +65,14 @@ public sealed class AzureServiceBusEventBus(
             return;
         }
 
-        var @event = JsonSerializer.Deserialize(eventLog.Payload, eventType) as IntegrationEvent;
-
-        await PublishAsync(@event);
-    }
-    public async Task ReprocessSubscriptionAsync<T>(T eventLog) where T : IntegrationEventLog
-    {
-        object ResolveHandler(IServiceProvider serviceProvider, string handlerTypeName, Type eventType)
+        if (JsonSerializer.Deserialize(eventLog.Payload, eventType) is IntegrationEvent @event)
         {
-            var handlerInterface = typeof(IIntegrationEventHandler<>).MakeGenericType(eventType);
-
-            var handlers = serviceProvider.GetServices(handlerInterface);
-
-            foreach (var handler in handlers)
-            {
-                if (handler.GetType().Name.Equals(handlerTypeName, StringComparison.OrdinalIgnoreCase))
-                {
-                    return handler;
-                }
-            }
-
-            return null;
+            await PublishAsync(@event);
         }
+    }
 
+    public async Task ReprocessSubscriptionAsync(IntegrationEventLog eventLog)
+    {
         if (eventLog.Type != IntegrationEventLogType.Subscriber)
         {
             logger.LogWarning("Skipping Reprocess Subscription: EventLog {EventId} is not of type Subscriber.", eventLog.EventId);
@@ -108,7 +92,6 @@ public sealed class AzureServiceBusEventBus(
         }
 
         using var scope = serviceProvider.CreateScope();
-
         var handler = ResolveHandler(scope.ServiceProvider, eventLog.EventHandler, eventType);
 
         if (handler == null)
@@ -118,11 +101,10 @@ public sealed class AzureServiceBusEventBus(
         }
 
         var concreteType = typeof(IIntegrationEventHandler<>).MakeGenericType(eventType);
-        var handleMethod = concreteType.GetMethod("Handle");
-
-        var task = (Task)handleMethod.Invoke(handler, [integrationEvent]);
-        await task;
+        var handleMethod = concreteType.GetMethod("Handle")!;
+        await (Task)handleMethod.Invoke(handler, [integrationEvent])!;
     }
+
     public async Task SubscribeAsync<T, TH>(string serviceName)
         where T : IntegrationEvent
         where TH : IIntegrationEventHandler<T>
@@ -141,7 +123,7 @@ public sealed class AzureServiceBusEventBus(
 
         if (_processors.ContainsKey(subscriptionName))
         {
-            return; // this subscription name already exist in processor, skip creating new one
+            return;
         }
 
         if (!await administrationClient.TopicExistsAsync(topicName))
@@ -188,7 +170,7 @@ public sealed class AzureServiceBusEventBus(
                 return;
             }
 
-            string eventName = typeObj.ToString();
+            string eventName = typeObj.ToString()!;
             var eventType = _eventNameCache.Value.TryGetValue(eventName, out var type) ? type : null;
 
             if (eventType == null)
@@ -199,7 +181,7 @@ public sealed class AzureServiceBusEventBus(
             }
 
             string messageBody = Encoding.UTF8.GetString(args.Message.Body);
-            object integrationEvent = JsonSerializer.Deserialize(messageBody, eventType);
+            object integrationEvent = JsonSerializer.Deserialize(messageBody, eventType)!;
 
             if (integrationEvent is null)
             {
@@ -210,7 +192,7 @@ public sealed class AzureServiceBusEventBus(
 
             try
             {
-                object handler = scope.ServiceProvider.GetService(handlerType);
+                object handler = scope.ServiceProvider.GetService(handlerType)!;
 
                 if (handler == null)
                 {
@@ -219,9 +201,8 @@ public sealed class AzureServiceBusEventBus(
                     return;
                 }
 
-                var handleMethod = handlerType.GetMethod("Handle");
-                var task = (Task)handleMethod.Invoke(handler, [integrationEvent]);
-                await task;
+                var handleMethod = handlerType.GetMethod("Handle")!;
+                await (Task)handleMethod.Invoke(handler, [integrationEvent])!;
 
                 await args.CompleteMessageAsync(args.Message);
                 logger.LogInformation("Successfully processed event {Event} with handler {HandlerType}.", eventName, handlerType.Name);
@@ -232,5 +213,21 @@ public sealed class AzureServiceBusEventBus(
                 await args.AbandonMessageAsync(args.Message);
             }
         };
+    }
+
+    private static object ResolveHandler(IServiceProvider serviceProvider, string handlerTypeName, Type eventType)
+    {
+        var handlerInterface = typeof(IIntegrationEventHandler<>).MakeGenericType(eventType);
+        var handlers = serviceProvider.GetServices(handlerInterface);
+
+        foreach (var handler in handlers)
+        {
+            if (handler!.GetType().Name.Equals(handlerTypeName, StringComparison.OrdinalIgnoreCase))
+            {
+                return handler;
+            }
+        }
+
+        return null;
     }
 }

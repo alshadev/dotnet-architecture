@@ -1,3 +1,6 @@
+using Arusha.EventBus;
+using Arusha.Template.Infrastructure.Persistence.Interceptors;
+
 namespace Arusha.Template.Infrastructure.Testing;
 
 /// <summary>
@@ -10,16 +13,17 @@ public static class TestingDependencyInjection
     /// Adds Infrastructure services configured for integration testing.
     /// Uses SQLite in-memory database to support transactions (required by TransactionBehavior).
     /// </summary>
-    /// <param name="services">The service collection.</param>
-    /// <param name="sqliteConnection">An open SQLite connection for in-memory database.</param>
-    /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddInfrastructureForTesting(
         this IServiceCollection services,
         DbConnection sqliteConnection)
     {
         // Database - Use provided SQLite connection
-        services.AddDbContext<ApplicationDbContext>(options =>
+        services.AddScoped<AuditSaveChangesInterceptor>();
+        services.AddScoped<DomainEventDispatcher>();
+
+        services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
+            options.AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>());
             options.UseSqlite(sqliteConnection);
             options.EnableSensitiveDataLogging();
             options.EnableDetailedErrors();
@@ -48,13 +52,13 @@ public static class TestingDependencyInjection
         services.AddDistributedMemoryCache();
         services.AddSingleton<ICacheService, DistributedCacheService>();
 
-        // Event Bus
-        services.AddSingleton<IEventBus, InMemoryEventBus>();
+        // Event Bus (InMemory for testing)
+        var handlerAssembly = typeof(Application.DependencyInjection).Assembly;
+        services.AddArushaEventBus(options => options.UseSqlite(sqliteConnection))
+            .UseInMemory(handlerAssembly);
 
         // Idempotency
         services.AddScoped<IIdempotencyService, IdempotencyService>();
-
-        // Don't register OutboxProcessor for tests (no background processing needed)
 
         return services;
     }

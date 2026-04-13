@@ -2,8 +2,8 @@ namespace Arusha.Template.Application.Behaviors;
 
 /// <summary>
 /// Pipeline behavior that wraps command handlers in a database transaction.
-/// Order: 4 (after idempotency check, before handler)
-/// 
+/// Order: 3 (after validation, before handler)
+///
 /// This ensures all changes made by a command handler are committed atomically.
 /// Handlers should NOT call SaveChanges - this behavior handles it.
 /// </summary>
@@ -15,22 +15,26 @@ public sealed class TransactionBehavior<TRequest, TResponse>(
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
+    // Cached per closed generic type — evaluated once per TRequest type, not per request
+    private static readonly bool _isCommand = typeof(TRequest).GetInterfaces().Any(i =>
+        i.IsGenericType
+            ? i.GetGenericTypeDefinition() == typeof(ICommand<>)
+            : i == typeof(ICommand));
+
     public async Task<TResponse> Handle(
         TRequest request,
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
         // Only apply to commands (write operations)
-        if (!IsCommand())
+        if (!_isCommand)
         {
             return await next();
         }
 
         string requestName = typeof(TRequest).Name;
 
-        logger.LogDebug(
-            "Beginning transaction for {RequestName}",
-            requestName);
+        logger.LogDebug("Beginning transaction for {RequestName}", requestName);
 
         try
         {
@@ -40,9 +44,7 @@ public sealed class TransactionBehavior<TRequest, TResponse>(
 
             await unitOfWork.CommitTransactionAsync(cancellationToken);
 
-            logger.LogDebug(
-                "Transaction committed for {RequestName}",
-                requestName);
+            logger.LogDebug("Transaction committed for {RequestName}", requestName);
 
             return response;
         }
@@ -58,13 +60,5 @@ public sealed class TransactionBehavior<TRequest, TResponse>(
 
             throw;
         }
-    }
-
-    private static bool IsCommand()
-    {
-        return typeof(TRequest).GetInterfaces().Any(i =>
-            i.IsGenericType &&
-            (i.GetGenericTypeDefinition() == typeof(ICommand<>) ||
-             i == typeof(ICommand)));
     }
 }

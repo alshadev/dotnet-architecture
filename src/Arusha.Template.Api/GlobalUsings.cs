@@ -1,3 +1,4 @@
+global using Arusha.EventBus;
 global using Arusha.Template.Api.Contracts;
 global using Arusha.Template.Api.Endpoints;
 global using Arusha.Template.Api.Middleware;

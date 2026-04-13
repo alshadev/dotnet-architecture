@@ -27,7 +27,8 @@ if (!builder.Environment.IsEnvironment("Test"))
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "dev-signing-key"))
+                    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]
+                        ?? throw new InvalidOperationException("JWT signing key is not configured. Set 'Jwt:Key' in appsettings.json or environment variables.")))
             };
         });
 }
@@ -121,8 +122,8 @@ app.UseAuthorization();
 // Map endpoints
 app.MapEndpointModules();
 
-// Subscribe to integration events
-app.SubscribeEvent("template");
+// Subscribe to integration events (auto-discovers all registered handlers)
+await app.UseArushaEventBusAsync("template");
 
 // Health check endpoint
 app.MapHealthChecks("/health", new HealthCheckOptions

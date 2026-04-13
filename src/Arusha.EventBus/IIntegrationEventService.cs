@@ -1,4 +1,4 @@
-namespace Arusha.Template.Domain.Primitives;
+namespace Arusha.EventBus;
 
 public interface IIntegrationEventService
 {

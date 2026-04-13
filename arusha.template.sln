@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Arusha.Template.Integration
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Arusha.Template.ArchitectureTest", "tests\Arusha.Template.ArchitectureTest\Arusha.Template.ArchitectureTest.csproj", "{27A262C3-3687-4C31-B17E-88A5EF5CFF9D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Arusha.EventBus", "src\Arusha.EventBus\Arusha.EventBus.csproj", "{27085F29-4CB0-4E15-8623-27F9A37BAE7C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -115,6 +117,18 @@ Global
 		{27A262C3-3687-4C31-B17E-88A5EF5CFF9D}.Release|x64.Build.0 = Release|Any CPU
 		{27A262C3-3687-4C31-B17E-88A5EF5CFF9D}.Release|x86.ActiveCfg = Release|Any CPU
 		{27A262C3-3687-4C31-B17E-88A5EF5CFF9D}.Release|x86.Build.0 = Release|Any CPU
+		{27085F29-4CB0-4E15-8623-27F9A37BAE7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27085F29-4CB0-4E15-8623-27F9A37BAE7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27085F29-4CB0-4E15-8623-27F9A37BAE7C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{27085F29-4CB0-4E15-8623-27F9A37BAE7C}.Debug|x64.Build.0 = Debug|Any CPU
+		{27085F29-4CB0-4E15-8623-27F9A37BAE7C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{27085F29-4CB0-4E15-8623-27F9A37BAE7C}.Debug|x86.Build.0 = Debug|Any CPU
+		{27085F29-4CB0-4E15-8623-27F9A37BAE7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27085F29-4CB0-4E15-8623-27F9A37BAE7C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27085F29-4CB0-4E15-8623-27F9A37BAE7C}.Release|x64.ActiveCfg = Release|Any CPU
+		{27085F29-4CB0-4E15-8623-27F9A37BAE7C}.Release|x64.Build.0 = Release|Any CPU
+		{27085F29-4CB0-4E15-8623-27F9A37BAE7C}.Release|x86.ActiveCfg = Release|Any CPU
+		{27085F29-4CB0-4E15-8623-27F9A37BAE7C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -127,5 +141,6 @@ Global
 		{B5FF836A-A09F-4505-9873-023D3516DE85} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{F4441437-86EB-4103-AF2A-0AC7F129C0EE} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{27A262C3-3687-4C31-B17E-88A5EF5CFF9D} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{27085F29-4CB0-4E15-8623-27F9A37BAE7C} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

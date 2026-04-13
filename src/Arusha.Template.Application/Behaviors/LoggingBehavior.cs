@@ -11,17 +11,21 @@ public sealed class LoggingBehavior<TRequest, TResponse>(
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
+    private static readonly string RequestName = typeof(TRequest).Name;
+
     public async Task<TResponse> Handle(
         TRequest request,
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        string requestName = typeof(TRequest).Name;
-
-        logger.LogInformation(
-            "Processing request {RequestName}: {@Request}",
-            requestName,
-            request);
+        if (logger.IsEnabled(LogLevel.Debug))
+        {
+            logger.LogDebug("Processing request {RequestName}: {@Request}", RequestName, request);
+        }
+        else
+        {
+            logger.LogInformation("Processing request {RequestName}", RequestName);
+        }
 
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -33,7 +37,7 @@ public sealed class LoggingBehavior<TRequest, TResponse>(
 
             logger.LogInformation(
                 "Completed request {RequestName} in {ElapsedMilliseconds}ms",
-                requestName,
+                RequestName,
                 stopwatch.ElapsedMilliseconds);
 
             return response;
@@ -45,7 +49,7 @@ public sealed class LoggingBehavior<TRequest, TResponse>(
             logger.LogError(
                 ex,
                 "Request {RequestName} failed after {ElapsedMilliseconds}ms: {ErrorMessage}",
-                requestName,
+                RequestName,
                 stopwatch.ElapsedMilliseconds,
                 ex.Message);
 

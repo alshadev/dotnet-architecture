@@ -144,8 +144,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity, ISoftDelet
         Status = OrderStatus.Confirmed;
         ConfirmedAt = DateTime.UtcNow;
 
-        // Raise integration event (will be processed via outbox)
-        RaiseDomainEvent(new Events.OrderConfirmedIntegrationEvent(Id, CustomerId, TotalPrice.Amount));
+        RaiseDomainEvent(new Events.OrderConfirmedDomainEvent(Id, CustomerId, TotalPrice.Amount));
     }
 
     /// <summary>
@@ -173,7 +172,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity, ISoftDelet
         Status = OrderStatus.Delivered;
         DeliveredAt = DateTime.UtcNow;
 
-        RaiseDomainEvent(new Events.OrderDeliveredIntegrationEvent(Id, CustomerId));
+        RaiseDomainEvent(new Events.OrderDeliveredDomainEvent(Id, CustomerId));
     }
 
     /// <summary>
@@ -191,7 +190,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditableEntity, ISoftDelet
         CancelledAt = DateTime.UtcNow;
         CancellationReason = reason;
 
-        RaiseDomainEvent(new Events.OrderCancelledIntegrationEvent(Id, CustomerId, reason));
+        RaiseDomainEvent(new Events.OrderCancelledDomainEvent(Id, CustomerId, reason));
     }
 
     /// <summary>

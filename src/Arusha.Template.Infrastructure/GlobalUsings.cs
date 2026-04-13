@@ -36,16 +36,11 @@ global using Arusha.Template.Application.Abstractions.Messaging;
 global using Arusha.Template.Application.Abstractions.Persistence;
 global using Arusha.Template.Application.Abstractions.Security;
 global using Arusha.Template.Application.Abstractions.Caching;
-global using Arusha.Template.Application.Abstractions.EventBus;
 global using Arusha.Template.Application.Abstractions.Idempotency;
 global using Arusha.Template.Application.Results;
-global using Arusha.Template.Application.Specifications;
 
 global using Arusha.Template.Infrastructure.Persistence;
 global using Arusha.Template.Infrastructure.Persistence.Repositories;
-global using Arusha.Template.Infrastructure.Outbox;
 global using Arusha.Template.Infrastructure.Idempotency;
-global using Arusha.Template.Infrastructure.EventBus;
 global using Arusha.Template.Infrastructure.Caching;
 global using Arusha.Template.Infrastructure.Security;
-

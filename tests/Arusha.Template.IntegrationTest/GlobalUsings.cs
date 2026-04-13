@@ -34,7 +34,6 @@ global using Arusha.Template.Application.Abstractions.Persistence;
 global using Arusha.Template.Application.Abstractions.Security;
 global using Arusha.Template.Application.Features.Orders.CreateOrder;
 global using Arusha.Template.Application.Features.Orders.GetOrder;
-global using Arusha.Template.Infrastructure.EventBus;
 global using Arusha.Template.Infrastructure.Idempotency;
 global using Arusha.Template.Infrastructure.Persistence;
 global using Arusha.Template.Infrastructure.Testing;

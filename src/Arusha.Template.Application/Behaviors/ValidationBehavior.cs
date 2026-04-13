@@ -19,20 +19,33 @@ public sealed class ValidationBehavior<TRequest, TResponse>(
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        if (!validators.Any())
+        // Materialize once to avoid multiple enumeration
+        var validatorList = validators as IReadOnlyList<IValidator<TRequest>> ?? validators.ToList();
+
+        if (validatorList.Count == 0)
         {
             return await next();
         }
 
         var context = new ValidationContext<TRequest>(request);
 
-        var validationResults = await Task.WhenAll(
-            validators.Select(v => v.ValidateAsync(context, cancellationToken)));
+        // Optimize for the common single-validator case
+        List<ValidationFailure> failures;
+        if (validatorList.Count == 1)
+        {
+            var result = await validatorList[0].ValidateAsync(context, cancellationToken);
+            failures = result.Errors.Where(f => f is not null).ToList();
+        }
+        else
+        {
+            var validationResults = await Task.WhenAll(
+                validatorList.Select(v => v.ValidateAsync(context, cancellationToken)));
 
-        var failures = validationResults
-            .SelectMany(r => r.Errors)
-            .Where(f => f is not null)
-            .ToList();
+            failures = validationResults
+                .SelectMany(r => r.Errors)
+                .Where(f => f is not null)
+                .ToList();
+        }
 
         if (failures.Count != 0)
         {
@@ -59,7 +72,6 @@ public sealed class ValidationBehavior<TRequest, TResponse>(
         }
 
         // If TResponse is Result<TValue>, return ValidationResult<TValue>
-        // Extract the TValue from Result<TValue>
         var resultType = typeof(TResponse);
         if (resultType.IsGenericType && resultType.GetGenericTypeDefinition() == typeof(Result<>))
         {

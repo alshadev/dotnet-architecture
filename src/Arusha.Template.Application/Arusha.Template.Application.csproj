@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Properties inherited from Directory.Build.props -->
 
@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Arusha.Template.Domain\Arusha.Template.Domain.csproj" />
+    <ProjectReference Include="..\Arusha.EventBus\Arusha.EventBus.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -21,8 +21,6 @@ global using Arusha.Template.Application.Abstractions.Messaging;
 global using Arusha.Template.Application.Abstractions.Persistence;
 global using Arusha.Template.Application.Abstractions.Security;
 global using Arusha.Template.Application.Abstractions.Caching;
-global using Arusha.Template.Application.Abstractions.EventBus;
 global using Arusha.Template.Application.Abstractions.Idempotency;
 global using Arusha.Template.Application.Behaviors;
 global using Arusha.Template.Application.Results;
-global using Arusha.Template.Application.Specifications;
